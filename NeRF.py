@@ -83,8 +83,8 @@ class NeRF(nn.Module):
         for x in range(StemDepth):
             if x == 0 and x in RequiresPositionEmbedding:
                 InputDimension = PositionEmbeddingDim
-                # InputDimension += nAuxParams
-                InputDimension += LightPosEmbeddingDim
+                InputDimension += nAuxParams
+                # InputDimension += LightPosEmbeddingDim
                 RequiresAuxiliaryInput = False
             elif x in RequiresPositionEmbedding:
                 InputDimension = PositionEmbeddingDim + StemHiddenDim
@@ -125,7 +125,7 @@ class NeRF(nn.Module):
         # if p.shape[0] == 0:
         #     print('NO SCENE PARAMS')
         p = p.unsqueeze(0).expand(x.shape[0], -1)
-        p = self.LightPosEmbedding(p)
+        # p = self.LightPosEmbedding(p)
         # p = self.PositionEmbedding(p)
 
         x = self.PositionEmbedding(x)

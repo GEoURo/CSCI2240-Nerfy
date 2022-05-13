@@ -38,7 +38,7 @@ def create_nerf(args, bounding_box=None):
                      GeoFeatDim=15, RequiresPositionEmbedding=(0,),
                      INGP=True, BoundingBox=bounding_box,
                      Log2TableSize=args.log2_hashmap_size,
-                     FinestRes=args.finest_res, nAuxParams=3).to(device)
+                     FinestRes=args.finest_res, nAuxParams=1).to(device)
     else:
         model = NeRF().to(device)
 
@@ -53,7 +53,7 @@ def create_nerf(args, bounding_box=None):
                               GeoFeatDim=15, RequiresPositionEmbedding=(0,),
                               INGP=True, BoundingBox=bounding_box,
                               Log2TableSize=args.log2_hashmap_size,
-                              FinestRes=args.finest_res, nAuxParams=3).to(device)
+                              FinestRes=args.finest_res, nAuxParams=1).to(device)
         else:
             model_fine = NeRF().to(device)
 
@@ -141,8 +141,8 @@ def render_images(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, save
 
     # FOR RENDERING VIDEO WITH VARYING LIGHT INTENSITY:
     # sample x in [0.0, 2.0] : abs(sin(x * pi/2))^2
-    # light_vals = torch.linspace(0.0, 2.0, len(render_poses))
-    # light_vals = torch.abs(torch.sin(light_vals * 3.14159265/2.0)) ** 2.0
+    light_vals = torch.linspace(0.0, 2.0, len(render_poses))
+    light_vals = torch.abs(torch.sin(light_vals * 3.14159265/2.0)) ** 2.0
 
     # FOR RENDERING VIDEO WITH VARYING LIGHT POSITION:
     # ts = torch.linspace(0.0, 2 * 3.141592, len(render_poses))
@@ -155,15 +155,15 @@ def render_images(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, save
     # FOR RENDERING VIDEO WITH VARYING DIFFUSE CHANNEL:
     # ts = torch.linspace(0.0, 2.0, len(render_poses))
     # red = torch.abs(torch.sin(ts * 3.14159265/2.0)) ** 2.0
-    # diffuse_vals = torch.stack([red, 1 - red, torch.ones(len(render_poses)) * 0.5]).t()
+    # diffuse_vals = torch.stack([torch.ones(len(render_poses)) * 0.5, red, 1-red]).t()
 
     # FOR RENDERING VIDEO WITH MOVING OBJECT:
-    ts = torch.linspace(0.0, 2 * 3.141592, len(render_poses))
-    obj_poses = torch.stack([torch.cos(ts), torch.sin(ts), torch.ones(len(render_poses)) * 0.012131691])
-    obj_poses[0] = (obj_poses[0] + 1.0) / (2.0)
-    obj_poses[1] = (obj_poses[1] + 1.0) / (2.0)
-    obj_poses = obj_poses.t()
-    print(obj_poses)
+    # ts = torch.linspace(0.0, 2 * 3.141592, len(render_poses))
+    # obj_poses = torch.stack([torch.cos(ts), torch.sin(ts), torch.ones(len(render_poses)) * 0.012131691])
+    # obj_poses[0] = (obj_poses[0] + 1.0) / (2.0)
+    # obj_poses[1] = (obj_poses[1] + 1.0) / (2.0)
+    # obj_poses = obj_poses.t()
+    # print(obj_poses)
 
     for i, c2w in enumerate(tqdm(render_poses)):
         print(i, time.time() - t)
@@ -172,10 +172,10 @@ def render_images(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, save
         #     aux_scene_param = torch.tensor(0.1)
         # else:
         #     aux_scene_param = aux_scene_params[i]
-        # aux_scene_param = light_vals[i]
+        aux_scene_param = light_vals[i]
         # aux_scene_param = light_poses[i]
         # aux_scene_param = diffuse_vals[i]
-        aux_scene_param = obj_poses[i]
+        # aux_scene_param = obj_poses[i]
         rgb, disp, acc, _ = render(H, W, K, chunk=chunk, c2w=c2w[:3, :4], aux_scene_params=aux_scene_param, **render_kwargs)
         rgbs.append(rgb.cpu().numpy())
         disps.append(disp.cpu().numpy())
